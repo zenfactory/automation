@@ -1,9 +1,13 @@
 #!/bin/bash
 # Define working variables
-workingRoot="/tmp/qfupgrade"
-siteRoot="/var/www/quranfoundation"
-siteUrl="http://www.thequranfoundation.com/"
 currentTime=`date +%s`
+workingRoot="/tmp/deployment-$currentTime"
+apacheRoot="/var/www"
+siteRoot="zenfactory"
+siteUrl="http://www.zenfactory.org"
+gitOrigin="https://github.com/zenfactory/webhome.git"
+parentBranch="master"
+childBranch="development"
 
 
 #########################################
@@ -17,14 +21,45 @@ mkdir $workingRoot
 cd $workingRoot
 
 # Dump sites mysql database using drush
-drush -r $siteRoot -l $siteUrl sql-dump > "$workingRoot/db-$currentTime.sql"
+drush -r "$apacheRoot/$siteRoot" -l $siteUrl sql-dump > "$workingRoot/db-$currentTime.sql"
+
+# Change to apache root
+cd $apacheRoot
 
 # Copy the entire site to a backup
-tar -czvf "$workingRoot/site-$currentTime.tgz" $siteRoot
+tar -czvf "$workingRoot/$siteRoot-$currentTime.tgz" $siteRoot
 
-# Try running the drush upgrade command see if it works.
+# Change to working directory
+cd $workingRoot
+
+# Uncompress original site backup
+tar -zxvf "$siteRoot-$currentTime.tgz"
+
+# Clone repository into working folder
+#git clone $gitOrigin originClone
+
+# Change to copy of 
+cd originClone
+
+# Create branch
+git branch $childBranch
+
+# Switch to new branch context
+git checkout $childBranch
+
+# Change back to working root
+cd $workingRoot
+
+
+# Remove git repo from template directory
+#rm -rf "$siteRoot/.git"
+
+# Navigate back to working root
+#mv originClone/.git $siteRoot
+#mv originClone/.gitignore $siteRoot
+
 
 #########################################
 # Make a backup of the site
 ########################################
-mysql -h localhost -u quranfoundation < "$workingRoot/db-$currentTime.sql"
+#mysql -h localhost -u quranfoundation < "$workingRoot/db-$currentTime.sql"
